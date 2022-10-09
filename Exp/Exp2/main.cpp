@@ -3,7 +3,8 @@
 //
 
 #include "SeqStack.hpp"
-
+#include "fix.hpp"
+#include "SeqQueue.hpp"
 
 int main(){
     string a;

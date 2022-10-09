@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.0.0)
-project(exp2)
+project(Exp2)
 
 include(CTest)
 enable_testing()

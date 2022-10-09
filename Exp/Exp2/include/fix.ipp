@@ -1,43 +1,14 @@
 //
-// Created by Rakan on 2022/9/26.
+// Created by Charm on 2022/10/8.
 //
 
-#ifndef NNU_DS_RAKAN_SEQSTACK_IPP
-#define NNU_DS_RAKAN_SEQSTACK_IPP
+#ifndef EXP2_FIX_IPP
+#define EXP2_FIX_IPP
 
-#endif //NNU_DS_RAKAN_SEQSTACK_IPP
+#endif //EXP2_FIX_IPP
 
-
-template<class T>
-SeqStack<T>::SeqStack() {
-    top = -1;
-};
-
-
-template<class T>
-void SeqStack<T>::Push(T x) {
-    data[top + 1] = x;
-    top++;
-}
-
-template<class T>
-T SeqStack<T>::Pop() {
-    top--;
-    return data[top + 1];
-}
-
-template<class T>
-T SeqStack<T>::Top() {
-    return data[top];
-}
-
-template<class T>
-bool SeqStack<T>::Empty() {
-    if (top == -1) return false;
-    else return true;
-}
-
-char Precede(char preop, char op) {
+char infix::CompareOp(char preop, char op)
+{
     switch (preop) {
         case '+': {
             switch (op) {
@@ -170,7 +141,13 @@ char Precede(char preop, char op) {
     return 0;
 }
 
-double Operate(double a, char op, double b) {
+bool infix::IsNum(char c) {
+    if (c <= '9' && c >= '0')
+        return true;
+    return false;
+}
+
+int infix::Operate(int a, char op, int b) {
     switch (op) {
         case '+':
             return a + b;
@@ -181,79 +158,141 @@ double Operate(double a, char op, double b) {
         case '/':
             return a / b;
     }
-    return 0;
+    cerr << "operator error" << endl;
+    exit(1);
 }
 
-string ConvertI2P(const string &expression) {
-    string result;
-    SeqStack<char> OPTR;
-
-    for (auto x: expression) {
-        if (x > '0' && x < '9') {
-            result += x;
-        } else if (x == '(') {
-            OPTR.Push(x);
-        } else if (x == ')') {
-            while (OPTR.Top() != '(') {
-                result += OPTR.Pop();
-            }
-            OPTR.Pop();
-        } else if (x == '@') {
-            while (OPTR.Empty()) {
-                result += OPTR.Pop();
-            }
-        } else {
-            char preop = OPTR.Top();
-            if (Precede(preop, x) == '<') {
-                OPTR.Push(x);
-            }else{
-
-            }
-        }
-    }
-    return result;
-}
-
-double Infix(const string &expression) {
-    if (expression.empty()) {
-        return 0.0;
-    }
-    SeqStack<char> OPRT;
-    SeqStack<int> OPND;
-    OPRT.Push('@');
-    for (auto x: expression) {
-        if (x > '0' && x < '9') {
-            OPND.Push(x);
-        } else {
-            char pre_op = OPRT.Top();
-            switch (Precede(pre_op, x)) {
-                case '<': {
-                    OPRT.Push(x);
+int infix::Solve(string prefix_expression) {
+    OPTR.Push('@');
+    for (int i = 0; i < prefix_expression.length(); i++) {
+        char c = prefix_expression[i];
+        if (IsNum(c))
+            OPND.Push(c - '0');
+        else {
+            if (c == ' ')
+                continue;
+            switch (CompareOp(OPTR.Top(), c)) {
+                case '<':
+                    OPTR.Push(c);
                     break;
-                }
-                case '=': {
-                    OPRT.Pop();
+                case '=':
+                    OPTR.Pop();
                     break;
-                }
-                case '>': {
-                    double b = OPND.Pop();
-                    double a = OPND.Pop();
-                    pre_op = OPRT.Pop();
-                    OPND.Push(Operate(a, pre_op, b));
-                    break;
-                }
-
+                case '>':
+                    int b = OPND.Pop();
+                    int a = OPND.Pop();
+                    char op = OPTR.Pop();
+                    OPND.Push(Operate(a, op, b));
+                    i--;
             }
         }
     }
     return OPND.Top();
 }
 
-double Postfix(const string &expression) {
-    if (expression.empty()) {
-        return 0;
+int infix::SolveEnhanced(string prefix_expression) {
+    OPTR.Push('@');
+    for (int i = 0; i < prefix_expression.length(); i++) {
+        char c = prefix_expression[i];
+        if (IsNum(c)) {
+            int t = c - '0';
+            while (IsNum(prefix_expression[++i])) {
+                t *= 10;
+                t += prefix_expression[i] - '0';
+            }
+            i--;
+            OPND.Push(t);
+        } else {
+            if (c == ' ')
+                continue;
+            switch (CompareOp(OPTR.Top(), c)) {
+                case '<':
+                    OPTR.Push(c);
+                    break;
+                case '=':
+                    OPTR.Pop();
+                    break;
+                case '>':
+                    int b = OPND.Pop();
+                    int a = OPND.Pop();
+                    char op = OPTR.Pop();
+                    OPND.Push(Operate(a, op, b));
+                    i--;
+            }
+        }
     }
-
-    return 0;
+    return OPND.Top();
 }
 
+string infix::ToSuffix(string prefix_expression) {
+    string suffix = "";
+    OPTR.Push('@');
+    for (int i = 0; i < prefix_expression.length(); i++) {
+        char c = prefix_expression[i];
+        if (c == '@') {
+            while (!OPTR.Empty())
+                suffix += OPTR.Pop();
+        } else if (IsNum(c)) { suffix += c; }
+        else if (c == '(')
+            OPTR.Push(c);
+        else if (c == ')') {
+            while (OPTR.Top() != '(') { suffix += OPTR.Pop(); }
+            OPTR.Pop();
+        } else {
+            switch (CompareOp(OPTR.Top(), c)) {
+                case '<':
+                    OPTR.Push(c);
+                    break;
+                case '>':
+                case '=':
+                    suffix += OPTR.Pop();
+                    i--;
+            }
+        }
+    }
+    return suffix;
+
+}
+
+bool Suffix::IsNum(char c)
+{
+    if (c <= '9' && c >= '0')
+        return true;
+    return false;
+}
+int Suffix::Operator(int a, char op, int b)
+{
+    switch (op)
+    {
+        case '+':
+            return a + b;
+        case '-':
+            return a - b;
+        case '*':
+            return a * b;
+        case '/':
+            return a / b;
+    }
+    cerr << "operator error" << endl;
+    exit(1);
+}
+int Suffix::Solve(string s)
+{
+    for(int i=0;i<s.length();i++)
+    {
+        char c = s[i];
+        if(IsNum(c))
+        {
+            OPND.Push(c-'0');
+        }
+        else if (c=='@')
+            return OPND.Top();
+        else
+        {
+            int b = OPND.Pop();
+            int a = OPND.Pop();
+            OPND.Push(Operator(a,c,b));
+        }
+    }
+    exit(1);
+}
