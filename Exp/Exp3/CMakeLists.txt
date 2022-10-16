@@ -1,8 +1,10 @@
 cmake_minimum_required(VERSION 3.0.0)
-project(HW)
+project(exp3)
 
+include(CTest)
+enable_testing()
 
-set(SOURCES HW5.cpp)
+set(SOURCES main.cpp)
 add_executable(${PROJECT_NAME} ${SOURCES})
 target_include_directories(${PROJECT_NAME} PRIVATE include/)
 
